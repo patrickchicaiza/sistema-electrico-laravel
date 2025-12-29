@@ -76,13 +76,23 @@ class User extends Authenticatable
         });
     }
 
-    // Scope para técnicos disponibles (sin muchos reportes pendientes)
+    // Scope para técnicos disponibles (sin límite)
     public function scopeTecnicosDisponibles($query)
     {
+        return $query->conRol('tecnico');
+        // Solo técnicos, sin restricción de reportes activos
+    }
+
+    // Scope para técnicos con menos carga (opcional para mejor distribución)
+    public function scopeTecnicosConMenosCarga($query)
+    {
         return $query->conRol('tecnico')
-            ->whereDoesntHave('reportesComoTecnico', function ($q) {
-                $q->whereIn('estado', ['asignado', 'en_proceso']);
-            }, '>=', 3); // Máximo 3 reportes activos
+            ->withCount([
+                'reportesComoTecnico as reportes_activos' => function ($q) {
+                    $q->whereIn('estado', ['asignado', 'en_proceso']);
+                }
+            ])
+            ->orderBy('reportes_activos', 'asc');
     }
 
     /**
@@ -107,17 +117,31 @@ class User extends Authenticatable
         return $this->hasRole('administrador') || $this->hasRole('super_admin');
     }
 
-    // Contar reportes activos (para validar límite de 3)
+    // Contar reportes activos (para validar límite de 3 - SOLO CLIENTES)
     public function getReportesActivosCountAttribute()
     {
-        return $this->reportesComoCliente()
-            ->whereIn('estado', ['pendiente', 'asignado', 'en_proceso'])
-            ->count();
+        if ($this->esCliente) {
+            return $this->reportesComoCliente()
+                ->whereIn('estado', ['pendiente', 'asignado', 'en_proceso'])
+                ->count();
+        }
+        return 0;
     }
 
-    // Verificar si puede crear más reportes
+    // Verificar si puede crear más reportes (SOLO CLIENTES)
     public function getPuedeCrearReporteAttribute()
     {
         return $this->esCliente && $this->reportes_activos_count < 3;
+    }
+
+    // Contar reportes activos como técnico (para información)
+    public function getReportesActivosTecnicoCountAttribute()
+    {
+        if ($this->esTecnico) {
+            return $this->reportesComoTecnico()
+                ->whereIn('estado', ['asignado', 'en_proceso'])
+                ->count();
+        }
+        return 0;
     }
 }
