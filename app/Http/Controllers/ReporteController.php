@@ -72,18 +72,17 @@ class ReporteController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): View
+    public function create(): \Illuminate\View\View|\Illuminate\Http\RedirectResponse
     {
         $user = auth()->user();
 
-        // Validar que sea cliente y pueda crear reportes
         if (!$user->hasRole('cliente')) {
             abort(403, 'Solo los clientes pueden crear reportes');
         }
 
-        // Usar el atributo del modelo User (que SÍ existe)
         if (!$user->puede_crear_reporte) {
-            return redirect()->route('reportes.index')->with('error', 'Has alcanzado el límite de 3 reportes activos. Espera a que se resuelvan algunos.');
+            return redirect()->route('reportes.index')
+                ->with('error', 'Has alcanzado el límite de 3 reportes activos. Espera a que se resuelvan algunos.');
         }
 
         return view('reportes.create');
@@ -204,10 +203,9 @@ class ReporteController extends Controller
         }
 
         // Reglas de validación BASE (para todos)
-        $rules = [
-            'descripcion' => 'required|string|min:10|max:1000',
-            'direccion' => 'required|string|max:500',
-        ];
+        $rules = [];
+
+        // **IMPORTANTE: Diferentes reglas según quién está editando**
 
         // Cliente solo puede editar descripción, dirección y prioridad si está pendiente
         if ($user->hasRole('cliente') && $reporte->user_id == $user->id) {
@@ -222,22 +220,42 @@ class ReporteController extends Controller
                     'solucion' => 'nullable|string|max:1000'
                 ];
             } else {
-                // Para edición normal, requiere prioridad
-                $rules['prioridad'] = 'required|in:alta,media,baja';
+                // Para edición normal, requiere descripción, dirección y prioridad
+                $rules = [
+                    'descripcion' => 'required|string|min:10|max:1000',
+                    'direccion' => 'required|string|max:500',
+                    'prioridad' => 'required|in:alta,media,baja'
+                ];
             }
         }
 
         // Técnico puede actualizar estado y solución
         if ($user->hasRole('tecnico') && $reporte->tecnico_asignado_id == $user->id) {
-            $rules['estado'] = 'required|in:en_proceso,resuelto,cancelado';
-            $rules['solucion'] = 'required_if:estado,resuelto,cancelado|string|max:1000';
+            $rules = [
+                'estado' => 'required|in:en_proceso,resuelto,cancelado',
+                'solucion' => 'required_if:estado,resuelto,cancelado|string|max:1000'
+            ];
+
+            // **AGREGAR VALIDACIÓN PARA ARCHIVOS**
+            if ($request->hasFile('evidencias_tecnico')) {
+                $rules['evidencias_tecnico.*'] = 'image|mimes:jpeg,png,jpg,gif|max:5120'; // 5MB máximo
+            }
         }
 
         // Administradores pueden editar todo
         if ($user->hasRole('administrador') || $user->hasRole('super_admin')) {
-            $rules['prioridad'] = 'required|in:alta,media,baja';
-            $rules['estado'] = 'required|in:pendiente,asignado,en_proceso,resuelto,cancelado';
-            $rules['solucion'] = 'nullable|string|max:1000';
+            $rules = [
+                'descripcion' => 'required|string|min:10|max:1000',
+                'direccion' => 'required|string|max:500',
+                'prioridad' => 'required|in:alta,media,baja',
+                'estado' => 'required|in:pendiente,asignado,en_proceso,resuelto,cancelado',
+                'solucion' => 'nullable|string|max:1000'
+            ];
+        }
+
+        // **VALIDAR SI HAY REGLAS DEFINIDAS**
+        if (empty($rules)) {
+            return back()->with('error', 'No tienes permisos para editar este reporte');
         }
 
         $validator = Validator::make($request->all(), $rules);
@@ -269,7 +287,7 @@ class ReporteController extends Controller
         }
 
         // Técnico actualiza estado y solución
-        if ($user->hasRole('tecnico')) {
+        if ($user->hasRole('tecnico') && $reporte->tecnico_asignado_id == $user->id) {
             $data = [
                 'estado' => $request->estado,
                 'solucion' => $request->solucion
@@ -280,7 +298,7 @@ class ReporteController extends Controller
                 $data['fecha_cierre'] = now();
             }
 
-            // Subir evidencias del técnico
+            // **MEJORADO: Subir evidencias del técnico**
             if ($request->hasFile('evidencias_tecnico')) {
                 foreach ($request->file('evidencias_tecnico') as $file) {
                     if ($file->isValid()) {
@@ -290,7 +308,7 @@ class ReporteController extends Controller
                             'reporte_id' => $reporte->id,
                             'imagen_path' => $path,
                             'tipo' => 'despues',
-                            'descripcion' => 'Evidencia del trabajo realizado'
+                            'descripcion' => $request->input('descripcion_evidencia', 'Evidencia del trabajo realizado')
                         ]);
                     }
                 }
@@ -306,17 +324,38 @@ class ReporteController extends Controller
             }
         }
 
+        // **VERIFICAR SI HAY DATOS PARA ACTUALIZAR**
+        if (empty($data)) {
+            return back()->with('error', 'No se proporcionaron datos para actualizar');
+        }
+
         // DEBUG: Ver qué se va a actualizar
         \Log::info('Datos a actualizar:', $data);
 
-        // Actualizar reporte
-        $reporte->update($data);
+        try {
+            // Actualizar reporte
+            $reporte->update($data);
 
-        // DEBUG: Ver resultado
-        \Log::info('Reporte actualizado. Nuevos valores:', $reporte->toArray());
+            // DEBUG: Ver resultado
+            \Log::info('Reporte actualizado. Nuevos valores:', $reporte->toArray());
 
-        return redirect()->route('reportes.show', $reporte->id)
-            ->with('success', 'Reporte actualizado exitosamente');
+            $mensaje = match ($reporte->estado) {
+                'resuelto' => 'Reporte marcado como resuelto exitosamente',
+                'cancelado' => 'Reporte cancelado exitosamente',
+                default => 'Reporte actualizado exitosamente'
+            };
+
+            return redirect()->route('reportes.show', $reporte->id)
+                ->with('success', $mensaje);
+
+        } catch (\Exception $e) {
+            \Log::error('Error al actualizar reporte:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Error al actualizar el reporte: ' . $e->getMessage());
+        }
     }
 
     /**
