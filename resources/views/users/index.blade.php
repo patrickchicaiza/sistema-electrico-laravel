@@ -101,7 +101,7 @@
                             })->count(),
                             'label' => 'Técnicos',
                             'color' => 'info',
-                            'icon' => 'user-hard-hat'
+                            'icon' => 'user-cog'
                         ],
                         [
                             'count' => \App\Models\User::whereHas('roles', function($q) {

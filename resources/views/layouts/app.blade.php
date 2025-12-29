@@ -111,27 +111,30 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                                     href="{{ route('dashboard') }}">
-                                    <i class="fas fa-home"></i> Dashboard
+                                    <i class="fas fa-home me-1"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
                                     href="{{ route('reportes.index') }}">
-                                    <i class="fas fa-clipboard-list"></i> Todos los Reportes
+                                    <i class="fas fa-clipboard-list me-1"></i> Todos los Reportes
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
                                     href="{{ route('users.index') }}">
-                                    <i class="fas fa-users"></i> Usuarios
+                                    <i class="fas fa-users me-1"></i> Usuarios
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"
-                                    href="{{ route('roles.index') }}">
-                                    <i class="fas fa-user-shield"></i> Roles
-                                </a>
-                            </li>
+                            <!-- VER ROLES SOLO SI TIENE PERMISO ver-roles -->
+                            @can('ver-roles')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"
+                                        href="{{ route('roles.index') }}">
+                                        <i class="fas fa-user-shield me-1"></i> Roles
+                                    </a>
+                                </li>
+                            @endcan
                         @endif
                     @endauth
                 </ul>

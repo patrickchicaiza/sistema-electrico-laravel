@@ -166,11 +166,41 @@
                                             <div class="col-md-6 col-lg-4">
                                                 <div class="card border-0 shadow-sm">
                                                     <div class="card-img-top position-relative">
-                                                        <img src="{{ $evidencia->url_imagen }}" class="img-fluid rounded-top"
-                                                            alt="Evidencia {{ $loop->iteration }}"
-                                                            style="height: 200px; width: 100%; object-fit: cover;"
-                                                            data-bs-toggle="modal" data-bs-target="#modalImagen{{ $evidencia->id }}"
-                                                            role="button">
+                                                        @php
+                                                            // Intentar obtener la URL de diferentes formas
+                                                            $urlImagen = null;
+
+                                                            // Método 1: Usando Storage
+                                                            if (Storage::exists($evidencia->imagen_path)) {
+                                                                $urlImagen = Storage::url($evidencia->imagen_path);
+                                                            }
+                                                            // Método 2: Usando asset (fallback)
+                                                            elseif (file_exists(public_path('storage/' . $evidencia->imagen_path))) {
+                                                                $urlImagen = asset('storage/' . $evidencia->imagen_path);
+                                                            }
+                                                            // Método 3: Si es URL completa
+                                                            elseif (filter_var($evidencia->imagen_path, FILTER_VALIDATE_URL)) {
+                                                                $urlImagen = $evidencia->imagen_path;
+                                                            }
+                                                        @endphp
+
+                                                        @if($urlImagen)
+                                                            <img src="{{ $urlImagen }}" class="img-fluid rounded-top"
+                                                                alt="Evidencia {{ $loop->iteration }}"
+                                                                style="height: 200px; width: 100%; object-fit: cover;"
+                                                                data-bs-toggle="modal" data-bs-target="#modalImagen{{ $evidencia->id }}"
+                                                                role="button">
+                                                        @else
+                                                            <!-- Imagen por defecto si no se encuentra -->
+                                                            <div class="bg-light d-flex align-items-center justify-content-center rounded-top"
+                                                                style="height: 200px; width: 100%;">
+                                                                <div class="text-center text-muted">
+                                                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                                                    <p class="small mb-0">Imagen no disponible</p>
+                                                                    <small class="x-small">Ruta: {{ $evidencia->imagen_path }}</small>
+                                                                </div>
+                                                            </div>
+                                                        @endif
 
                                                         <!-- Badge del tipo de evidencia -->
                                                         <span
@@ -186,39 +216,12 @@
                                                             <small class="text-muted">
                                                                 {{ $evidencia->created_at->format('d/m/Y H:i') }}
                                                             </small>
-                                                            <a href="{{ $evidencia->url_imagen }}" target="_blank"
-                                                                class="btn btn-sm btn-outline-secondary">
-                                                                <i class="fas fa-download"></i>
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Modal para imagen ampliada -->
-                                                <div class="modal fade" id="modalImagen{{ $evidencia->id }}" tabindex="-1">
-                                                    <div class="modal-dialog modal-lg">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h6 class="modal-title">
-                                                                    Evidencia {{ $loop->iteration }} -
-                                                                    {{ ucfirst($evidencia->tipo) }}
-                                                                </h6>
-                                                                <button type="button" class="btn-close"
-                                                                    data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body text-center p-0">
-                                                                <img src="{{ $evidencia->url_imagen }}" class="img-fluid"
-                                                                    alt="Evidencia ampliada" style="max-height: 70vh;">
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <small class="text-muted me-auto">
-                                                                    {{ $evidencia->descripcion }}
-                                                                </small>
-                                                                <a href="{{ $evidencia->url_imagen }}" download
-                                                                    class="btn btn-primary">
-                                                                    <i class="fas fa-download me-1"></i> Descargar
+                                                            @if($urlImagen)
+                                                                <a href="{{ $urlImagen }}" target="_blank"
+                                                                    class="btn btn-sm btn-outline-secondary">
+                                                                    <i class="fas fa-download"></i>
                                                                 </a>
-                                                            </div>
+                                                            @endif
                                                         </div>
                                                     </div>
                                                 </div>
