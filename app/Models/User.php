@@ -131,7 +131,8 @@ class User extends Authenticatable
     // Verificar si puede crear más reportes (SOLO CLIENTES)
     public function getPuedeCrearReporteAttribute()
     {
-        return $this->esCliente && $this->reportes_activos_count < 3;
+        return $this->esCliente && $this->reportesComoCliente()
+            ->where('estado', 'pendiente')->count() < 3;
     }
 
     // Contar reportes activos como técnico (para información)

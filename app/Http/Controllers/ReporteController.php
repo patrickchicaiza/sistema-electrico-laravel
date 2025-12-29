@@ -83,8 +83,7 @@ class ReporteController extends Controller
 
         // Usar el atributo del modelo User (que SÍ existe)
         if (!$user->puede_crear_reporte) {
-            return redirect()->route('reportes.index')
-                ->with('error', 'Has alcanzado el límite de 3 reportes activos. Espera a que se resuelvan algunos.');
+            return redirect()->route('reportes.index')->with('error', 'Has alcanzado el límite de 3 reportes activos. Espera a que se resuelvan algunos.');
         }
 
         return view('reportes.create');
@@ -190,6 +189,7 @@ class ReporteController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
     public function update(Request $request, $id): RedirectResponse
     {
         $user = auth()->user();
@@ -214,8 +214,17 @@ class ReporteController extends Controller
             if ($reporte->estado != 'pendiente') {
                 return back()->with('error', 'No puedes editar un reporte que ya está en proceso');
             }
-            // ¡AGREGAR PRIORIDAD para clientes!
-            $rules['prioridad'] = 'required|in:alta,media,baja';
+
+            // **CAMBIO AQUÍ: Si el cliente está cancelando, reglas diferentes**
+            if ($request->estado == 'cancelado') {
+                // Para cancelar, solo necesita solución (opcional)
+                $rules = [
+                    'solucion' => 'nullable|string|max:1000'
+                ];
+            } else {
+                // Para edición normal, requiere prioridad
+                $rules['prioridad'] = 'required|in:alta,media,baja';
+            }
         }
 
         // Técnico puede actualizar estado y solución
@@ -241,13 +250,22 @@ class ReporteController extends Controller
         // Preparar datos para actualizar
         $data = [];
 
-        // Cliente actualiza descripción, dirección y prioridad
+        // **CAMBIO AQUÍ: Cliente puede cancelar o editar**
         if ($user->hasRole('cliente')) {
-            $data = [
-                'descripcion' => $request->descripcion,
-                'direccion' => $request->direccion,
-                'prioridad' => $request->prioridad // ¡IMPORTANTE!
-            ];
+            if ($request->estado == 'cancelado') {
+                // Cancelar el reporte
+                $data = [
+                    'estado' => 'cancelado',
+                    'solucion' => $request->solucion ?: 'Cancelado por el cliente'
+                ];
+            } else {
+                // Edición normal del reporte
+                $data = [
+                    'descripcion' => $request->descripcion,
+                    'direccion' => $request->direccion,
+                    'prioridad' => $request->prioridad
+                ];
+            }
         }
 
         // Técnico actualiza estado y solución
