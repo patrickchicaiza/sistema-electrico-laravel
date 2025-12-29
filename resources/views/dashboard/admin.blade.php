@@ -16,10 +16,7 @@
                         </button>
                         <a href="{{ route('users.index') }}" class="btn btn-outline-success">
                             <i class="fas fa-users me-1"></i> Usuarios
-                        </a>
-                        <a href="{{ route('roles.index') }}" class="btn btn-outline-warning">
-                            <i class="fas fa-user-shield me-1"></i> Roles
-                        </a>
+                        </a>                        
                     </div>
                 </div>
 

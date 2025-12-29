@@ -132,7 +132,7 @@ class UserController extends Controller
         $userActual = auth()->user();
         $user = User::findOrFail($id);
 
-        // Validar que el usuario actual PUEDE ver este usuario
+        // **CAMBIAR ESTA LÓGICA: Permitir que cliente vea SU propio perfil**
         if (!$this->puedeVerUsuario($userActual, $user)) {
             abort(403, 'No autorizado para ver este usuario');
         }
@@ -177,6 +177,26 @@ class UserController extends Controller
         // Validar que el usuario actual PUEDE editar este usuario
         if (!$this->puedeEditarUsuario($userActual, $user)) {
             abort(403, 'No autorizado para editar este usuario');
+        }
+        // **NUEVA VALIDACIÓN: No cambiar técnico a cliente si tiene reportes activos**
+        if ($user->hasRole('tecnico')) {
+            $nuevosRoles = $request->roles;
+            $sigueSiendoTecnico = in_array('tecnico', $nuevosRoles);
+
+            if (!$sigueSiendoTecnico) {
+                // Verificar si tiene reportes activos asignados
+                $reportesActivos = $user->reportesComoTecnico()
+                    ->whereIn('estado', ['asignado', 'en_proceso'])
+                    ->count();
+
+                if ($reportesActivos > 0) {
+                    return back()->withErrors([
+                        'roles' => 'No se puede cambiar el rol de técnico a cliente porque tiene ' .
+                            $reportesActivos . ' reporte(s) activo(s) asignado(s). ' .
+                            'Reasigna los reportes primero o márcalos como resueltos.'
+                    ])->withInput();
+                }
+            }
         }
 
         // Validación básica - SOLO UN ROL
@@ -277,15 +297,19 @@ class UserController extends Controller
             return !$userAVer->hasRole('super_admin');
         }
 
-        // Técnico puede verse a sí mismo y a administradores
+        // **CAMBIAR ESTO: Técnico puede verse a sí mismo y a administradores**
         if ($userActual->hasRole('tecnico')) {
             return $userAVer->id == $userActual->id ||
                 $userAVer->hasRole('administrador') ||
                 $userAVer->hasRole('super_admin');
         }
 
-        // Cliente solo puede verse a sí mismo
-        return $userAVer->id == $userActual->id;
+        // **CAMBIAR ESTO: Cliente puede verse a sí mismo**
+        if ($userActual->hasRole('cliente')) {
+            return $userAVer->id == $userActual->id;
+        }
+
+        return false;
     }
 
     private function puedeEditarUsuario($userActual, $userAEditar): bool
