@@ -40,14 +40,6 @@
                     </div>
                 </div>
 
-                <!-- Mensajes de sesión -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
@@ -389,23 +381,28 @@
                                         </div>
                                     @endif
 
-                                    @if($reporte->estado == 'en_proceso')
+                                    @if(auth()->user()->es_tecnico && $reporte->tecnico_asignado_id == auth()->id() && $reporte->estado == 'en_proceso')
                                         <div class="mb-3">
+                                            <h6 class="small text-muted mb-2">Marcar como Resuelto</h6>
                                             <form action="{{ route('reportes.update', $reporte->id) }}" method="POST"
-                                                id="formResolver">
+                                                id="formResolver" enctype="multipart/form-data">
                                                 @csrf
                                                 @method('PUT')
 
                                                 <div class="mb-3">
-                                                    <label class="form-label small">Solución aplicada</label>
+                                                    <label class="form-label small">Solución aplicada *</label>
                                                     <textarea name="solucion" class="form-control" rows="3"
                                                         placeholder="Describe la solución aplicada..." required></textarea>
                                                 </div>
 
                                                 <div class="mb-3">
-                                                    <label class="form-label small">Subir fotos del trabajo</label>
+                                                    <label class="form-label small">Subir fotos del trabajo terminado
+                                                        (opcional)</label>
                                                     <input type="file" name="evidencias_tecnico[]" class="form-control" multiple
                                                         accept="image/*">
+                                                    <div class="form-text">
+                                                        Puedes subir imágenes del resultado final (máx. 5MB por imagen)
+                                                    </div>
                                                 </div>
 
                                                 <input type="hidden" name="estado" value="resuelto">
@@ -420,7 +417,6 @@
                                         </div>
                                     @endif
                                 @endif
-
                                 <!-- Acciones para ADMINISTRADOR -->
                                 @if(auth()->user()->es_administrador)
                                     @if($reporte->estado == 'pendiente')
