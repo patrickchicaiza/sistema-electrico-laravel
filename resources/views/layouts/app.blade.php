@@ -111,27 +111,30 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
                                     href="{{ route('dashboard') }}">
-                                    <i class="fas fa-home"></i> Dashboard
+                                    <i class="fas fa-home me-1"></i> Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
                                     href="{{ route('reportes.index') }}">
-                                    <i class="fas fa-clipboard-list"></i> Todos los Reportes
+                                    <i class="fas fa-clipboard-list me-1"></i> Todos los Reportes
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
                                     href="{{ route('users.index') }}">
-                                    <i class="fas fa-users"></i> Usuarios
+                                    <i class="fas fa-users me-1"></i> Usuarios
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"
-                                    href="{{ route('roles.index') }}">
-                                    <i class="fas fa-user-shield"></i> Roles
-                                </a>
-                            </li>
+                            <!-- VER ROLES SOLO SI TIENE PERMISO ver-roles -->
+                            @can('ver-roles')
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"
+                                        href="{{ route('roles.index') }}">
+                                        <i class="fas fa-user-shield me-1"></i> Roles
+                                    </a>
+                                </li>
+                            @endcan
                         @endif
                     @endauth
                 </ul>
@@ -155,8 +158,8 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-user"></i> Mi Perfil
+                                    <a class="dropdown-item" href="{{ route('users.show', auth()->id()) }}">
+                                        <i class="fas fa-user-circle me-2"></i> Mi Perfil
                                     </a>
                                 </li>
                                 <li>
@@ -181,47 +184,8 @@
     <!-- Contenido Principal -->
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar solo para usuarios autenticados -->
-            @auth
-                <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" id="sidebarMenu">
-                    <div class="position-sticky pt-3">
-                        <ul class="nav flex-column">
-                            <!-- Estadísticas rápidas según rol -->
-                            @if(auth()->user()->es_cliente)
-                                <li class="nav-item mb-2">
-                                    <div class="text-white px-3">
-                                        <small class="text-muted">Reportes activos</small>
-                                        <h5 class="mb-0">{{ auth()->user()->reportes_activos_count }}/3</h5>
-                                    </div>
-                                </li>
-                            @endif
-
-                            @if(auth()->user()->es_tecnico)
-                                <li class="nav-item mb-2">
-                                    <div class="text-white px-3">
-                                        <small class="text-muted">Asignados</small>
-                                        <h5 class="mb-0">
-                                            {{ auth()->user()->reportesComoTecnico()->whereIn('estado', ['asignado', 'en_proceso'])->count() }}
-                                        </h5>
-                                    </div>
-                                </li>
-                            @endif
-
-                            @if(auth()->user()->es_administrador)
-                                <li class="nav-item mb-2">
-                                    <div class="text-white px-3">
-                                        <small class="text-muted">Reportes pendientes</small>
-                                        <h5 class="mb-0">{{ \App\Models\Reporte::pendientes()->count() }}</h5>
-                                    </div>
-                                </li>
-                            @endif
-                        </ul>
-                    </div>
-                </div>
-            @endauth
-
-            <!-- Contenido dinámico -->
-            <main class="@auth col-md-9 col-lg-10 ms-sm-auto @else col-12 @endauth px-md-4 py-4">
+            <!-- Contenido dinámico - OCUPANDO TODO EL ANCHO -->
+            <main class="col-12 px-md-4 py-4">
                 <!-- Mensajes de sesión -->
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">

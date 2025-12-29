@@ -23,6 +23,9 @@ Route::get('/home', function () {
 
 // ===== TODAS LAS RUTAS PROTEGIDAS =====
 Route::middleware(['auth'])->group(function () {
+    // Ruta para perfil personal (todos los usuarios autenticados)
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 
     // Dashboard según rol (sin middleware extra)
     Route::get('/dashboard', function () {

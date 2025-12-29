@@ -16,10 +16,10 @@ class CreateAdminUserSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'administrador']);
         $tecnicoRole = Role::firstOrCreate(['name' => 'tecnico']);
         $clienteRole = Role::firstOrCreate(['name' => 'cliente']);
-        
+
         // Asignar TODOS los permisos a super_admin
         $superAdminRole->syncPermissions(Permission::all());
-        
+
         // Asignar permisos específicos a administrador
         $adminRole->syncPermissions([
             'ver-usuarios',
@@ -29,21 +29,23 @@ class CreateAdminUserSeeder extends Seeder
             'editar-reportes',
             'asignar-reportes'
         ]);
-        
+
         // Asignar permisos a técnico
         $tecnicoRole->syncPermissions([
+            'ver-usuarios',
             'ver-reportes',
             'editar-reportes' // Solo sus reportes asignados
         ]);
-        
+
         // Asignar permisos a cliente
         $clienteRole->syncPermissions([
+            'ver-usuarios',
             'crear-reportes',
-            'ver-reportes' // Solo sus reportes
+            'ver-reportes', // Solo sus reportes
+            'editar-reportes'  // 
         ]);
-
         // SEGUNDO: Crear usuarios de prueba
-        
+
         // 1. Super Admin
         $superAdmin = User::firstOrCreate(
             ['email' => 'admin@gmail.com'],
@@ -54,7 +56,7 @@ class CreateAdminUserSeeder extends Seeder
             ]
         );
         $superAdmin->syncRoles([$superAdminRole->name]);
-        
+
         // 2. Administrador
         $admin = User::firstOrCreate(
             ['email' => 'carlos@electrica.com'],
@@ -65,7 +67,7 @@ class CreateAdminUserSeeder extends Seeder
             ]
         );
         $admin->syncRoles([$adminRole->name]);
-        
+
         // 3. Técnico
         $tecnico = User::firstOrCreate(
             ['email' => 'tecnico@electrica.com'],
@@ -77,7 +79,7 @@ class CreateAdminUserSeeder extends Seeder
             ]
         );
         $tecnico->syncRoles([$tecnicoRole->name]);
-        
+
         // 4. Cliente
         $cliente = User::firstOrCreate(
             ['email' => 'cliente@gmail.com'],
@@ -89,7 +91,7 @@ class CreateAdminUserSeeder extends Seeder
             ]
         );
         $cliente->syncRoles([$clienteRole->name]);
-        
+
         // 5. Otro cliente para pruebas
         $cliente2 = User::firstOrCreate(
             ['email' => 'maria@gmail.com'],
@@ -101,7 +103,7 @@ class CreateAdminUserSeeder extends Seeder
             ]
         );
         $cliente2->syncRoles([$clienteRole->name]);
-        
+
         echo "Seeder ejecutado exitosamente!\n";
         echo "Usuarios creados:\n";
         echo "1. Super Admin: admin@gmail.com / admin123456\n";

@@ -13,7 +13,7 @@ Sistema web desarrollado en Laravel para la gestión de reportes de fallas eléc
 
 ## 🛠️ Tecnologías
 
-- **Backend:** Laravel 10, PHP 8.1
+- **Backend:** Laravel 12.44, PHP 8.1
 - **Frontend:** Bootstrap 5, Blade
 - **Base de datos:** PostgreSQL
 - **Autenticación:** Laravel UI + Spatie Permissions
