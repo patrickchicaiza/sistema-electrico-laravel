@@ -112,9 +112,20 @@ class RoleController extends Controller
             }
         }
 
+        // **VERIFICAR QUE LOS PERMISOS EXISTAN ANTES DE CREAR EL ROL**
+        $permisosValidos = Permission::whereIn('id', $request->permissions)->pluck('id')->toArray();
+
+        if (count($permisosValidos) === 0) {
+            return back()->withErrors([
+                'permissions' => 'No se encontraron permisos válidos seleccionados'
+            ])->withInput();
+        }
+
         // Crear rol
         $role = Role::create(['name' => $request->name, 'guard_name' => 'web']);
-        $role->syncPermissions($request->permissions);
+
+        // **USAR LOS PERMISOS VALIDADOS**
+        $role->syncPermissions($permisosValidos);
 
         return redirect()->route('roles.index')
             ->with('success', 'Rol "' . $role->name . '" creado exitosamente');
@@ -222,11 +233,21 @@ class RoleController extends Controller
             }
         }
 
+        // **VERIFICAR QUE LOS PERMISOS EXISTAN**
+        $permisosValidos = Permission::whereIn('id', $request->permissions)->pluck('id')->toArray();
+
+        if (count($permisosValidos) === 0) {
+            return back()->withErrors([
+                'permissions' => 'No se encontraron permisos válidos seleccionados'
+            ])->withInput();
+        }
+
         // Actualizar
         $role->name = $request->name;
         $role->save();
 
-        $role->syncPermissions($request->permissions);
+        // **USAR LOS PERMISOS VALIDADOS**
+        $role->syncPermissions($permisosValidos);
 
         return redirect()->route('roles.index')
             ->with('success', 'Rol "' . $role->name . '" actualizado exitosamente');
