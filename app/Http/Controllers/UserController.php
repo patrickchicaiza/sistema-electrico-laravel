@@ -47,10 +47,10 @@ class UserController extends Controller
             $users = $query->latest()->paginate(10)->withQueryString();
 
         } elseif ($userActual->hasRole('tecnico')) {
-            // Técnico se ve a sí mismo y a administradores (para contactar)
+            // **CORRECCIÓN: Técnico se ve a sí mismo y solo a administradores (NO super_admins)**
             $users = User::where('id', $userActual->id)
                 ->orWhereHas('roles', function ($q) {
-                    $q->whereIn('name', ['administrador', 'super_admin']);
+                    $q->where('name', 'administrador'); // ← SOLO administrador, NO super_admin
                 })
                 ->get();
         } else {
@@ -297,14 +297,13 @@ class UserController extends Controller
             return !$userAVer->hasRole('super_admin');
         }
 
-        // **CAMBIAR ESTO: Técnico puede verse a sí mismo y a administradores**
+        // **CORRECCIÓN: Técnico puede verse a sí mismo y solo a administradores**
         if ($userActual->hasRole('tecnico')) {
             return $userAVer->id == $userActual->id ||
-                $userAVer->hasRole('administrador') ||
-                $userAVer->hasRole('super_admin');
+                $userAVer->hasRole('administrador'); // ← SOLO administrador
         }
 
-        // **CAMBIAR ESTO: Cliente puede verse a sí mismo**
+        // Cliente solo puede verse a sí mismo
         if ($userActual->hasRole('cliente')) {
             return $userAVer->id == $userActual->id;
         }
@@ -327,10 +326,16 @@ class UserController extends Controller
         // Administrador puede editar clientes y técnicos
         if ($userActual->hasRole('administrador')) {
             return $userAEditar->hasRole('cliente') ||
-                $userAEditar->hasRole('tecnico');
+                $userAEditar->hasRole('tecnico') ||
+                $userAEditar->id == $userActual->id; // ← Puede editar su propio perfil
         }
 
-        // Usuarios solo pueden editar su propia cuenta
+        // Técnico solo puede editar su propia cuenta
+        if ($userActual->hasRole('tecnico')) {
+            return $userAEditar->id == $userActual->id;
+        }
+
+        // Cliente solo puede editar su propia cuenta
         return $userAEditar->id == $userActual->id;
     }
 
