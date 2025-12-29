@@ -28,7 +28,7 @@ class UserController extends Controller
         // Lógica de visibilidad mejorada
         if ($userActual->hasRole('super_admin') || $userActual->hasRole('administrador')) {
             // Admin ve todos excepto super_admins (a menos que sea super_admin)
-            $query = User::query();
+            $query = User::query()->with('roles');
 
             if (!$userActual->hasRole('super_admin')) {
                 // Administrador normal NO ve super_admins
@@ -37,7 +37,15 @@ class UserController extends Controller
                 });
             }
 
-            $users = $query->latest()->paginate(10);
+            // FILTRO POR ROL
+            if ($request->has('rol') && $request->rol != '') {
+                $query->whereHas('roles', function ($q) use ($request) {
+                    $q->where('name', $request->rol);
+                });
+            }
+
+            $users = $query->latest()->paginate(10)->withQueryString();
+
         } elseif ($userActual->hasRole('tecnico')) {
             // Técnico se ve a sí mismo y a administradores (para contactar)
             $users = User::where('id', $userActual->id)
