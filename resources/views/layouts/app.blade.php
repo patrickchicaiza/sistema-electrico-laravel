@@ -155,7 +155,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <a class="dropdown-item" href="#">
+                                    <a class="dropdown-item" href="{{ route('users.show', auth()->id()) }}">
                                         <i class="fas fa-user"></i> Mi Perfil
                                     </a>
                                 </li>
@@ -181,47 +181,8 @@
     <!-- Contenido Principal -->
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar solo para usuarios autenticados -->
-            @auth
-                <div class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse" id="sidebarMenu">
-                    <div class="position-sticky pt-3">
-                        <ul class="nav flex-column">
-                            <!-- Estadísticas rápidas según rol -->
-                            @if(auth()->user()->es_cliente)
-                                <li class="nav-item mb-2">
-                                    <div class="text-white px-3">
-                                        <small class="text-muted">Reportes activos</small>
-                                        <h5 class="mb-0">{{ auth()->user()->reportes_activos_count }}/3</h5>
-                                    </div>
-                                </li>
-                            @endif
-
-                            @if(auth()->user()->es_tecnico)
-                                <li class="nav-item mb-2">
-                                    <div class="text-white px-3">
-                                        <small class="text-muted">Asignados</small>
-                                        <h5 class="mb-0">
-                                            {{ auth()->user()->reportesComoTecnico()->whereIn('estado', ['asignado', 'en_proceso'])->count() }}
-                                        </h5>
-                                    </div>
-                                </li>
-                            @endif
-
-                            @if(auth()->user()->es_administrador)
-                                <li class="nav-item mb-2">
-                                    <div class="text-white px-3">
-                                        <small class="text-muted">Reportes pendientes</small>
-                                        <h5 class="mb-0">{{ \App\Models\Reporte::pendientes()->count() }}</h5>
-                                    </div>
-                                </li>
-                            @endif
-                        </ul>
-                    </div>
-                </div>
-            @endauth
-
-            <!-- Contenido dinámico -->
-            <main class="@auth col-md-9 col-lg-10 ms-sm-auto @else col-12 @endauth px-md-4 py-4">
+            <!-- Contenido dinámico - OCUPANDO TODO EL ANCHO -->
+            <main class="col-12 px-md-4 py-4">
                 <!-- Mensajes de sesión -->
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
