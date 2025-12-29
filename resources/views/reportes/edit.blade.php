@@ -507,13 +507,13 @@
                         const col = document.createElement('div');
                         col.className = 'col-md-4 col-lg-3';
                         col.innerHTML = `
-                            <div class="image-preview">
-                                <img src="${e.target.result}" alt="${file.name}">
-                                <button type="button" class="remove-btn" data-name="${file.name}">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        `;
+                                            <div class="image-preview">
+                                                <img src="${e.target.result}" alt="${file.name}">
+                                                <button type="button" class="remove-btn" data-name="${file.name}">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        `;
                         previewContainer.appendChild(col);
 
                         col.querySelector('.remove-btn').addEventListener('click', function () {
@@ -527,13 +527,13 @@
                     const descDiv = document.createElement('div');
                     descDiv.className = 'mb-2';
                     descDiv.innerHTML = `
-                        <label class="form-label small">Descripción para: <strong>${fileName}</strong></label>
-                        <input type="text" 
-                               name="descripcion_evidencia[]" 
-                               class="form-control form-control-sm" 
-                               placeholder="Ej: Nueva foto del problema..."
-                               data-file="${fileName}">
-                    `;
+                                        <label class="form-label small">Descripción para: <strong>${fileName}</strong></label>
+                                        <input type="text" 
+                                               name="descripcion_evidencia[]" 
+                                               class="form-control form-control-sm" 
+                                               placeholder="Ej: Nueva foto del problema..."
+                                               data-file="${fileName}">
+                                    `;
                     descripcionesContainer.appendChild(descDiv);
                 }
 
@@ -558,23 +558,23 @@
                         previewContainer.classList.remove('d-none');
                         descripcionesContainer.classList.remove('d-none');
                         dropzone.querySelector('.dz-message').innerHTML = `
-                            <div class="text-success">
-                                <i class="fas fa-check-circle mb-2"></i>
-                                <div>${selectedFiles.length} de ${MAX_FILES} imágenes adicionales</div>
-                                <small class="text-muted">Haz click para agregar más</small>
-                            </div>
-                        `;
+                                            <div class="text-success">
+                                                <i class="fas fa-check-circle mb-2"></i>
+                                                <div>${selectedFiles.length} de ${MAX_FILES} imágenes adicionales</div>
+                                                <small class="text-muted">Haz click para agregar más</small>
+                                            </div>
+                                        `;
                     } else {
                         previewContainer.classList.add('d-none');
                         descripcionesContainer.classList.add('d-none');
                         dropzone.querySelector('.dz-message').innerHTML = `
-                            <div class="text-muted mb-3">
-                                <i class="fas fa-cloud-upload-alt fa-2x"></i>
-                            </div>
-                            <h6>Arrastra y suelta fotos aquí</h6>
-                            <p class="text-muted small">o haz click para seleccionar</p>
-                            <small class="text-muted">Formatos: JPG, PNG, GIF (máx. 5MB cada una)</small>
-                        `;
+                                            <div class="text-muted mb-3">
+                                                <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                                            </div>
+                                            <h6>Arrastra y suelta fotos aquí</h6>
+                                            <p class="text-muted small">o haz click para seleccionar</p>
+                                            <small class="text-muted">Formatos: JPG, PNG, GIF (máx. 5MB cada una)</small>
+                                        `;
                     }
                 }
 
@@ -583,12 +583,19 @@
                     // Validar cambios mínimos
                     const descripcion = document.getElementById('descripcion').value;
                     const direccion = document.getElementById('direccion').value;
+                    const prioridad = document.getElementById('prioridad').value;
+
                     const originalDescripcion = "{{ $reporte->descripcion }}";
                     const originalDireccion = "{{ $reporte->direccion }}";
+                    const originalPrioridad = "{{ $reporte->prioridad }}";
 
-                    if (descripcion === originalDescripcion &&
-                        direccion === originalDireccion &&
-                        selectedFiles.length === 0) {
+                    // Validar si hay ALGÚN cambio
+                    const hayCambios = descripcion !== originalDescripcion ||
+                        direccion !== originalDireccion ||
+                        prioridad !== originalPrioridad ||
+                        selectedFiles.length > 0;
+
+                    if (!hayCambios) {
                         e.preventDefault();
                         showAlert('info', 'No hay cambios para guardar');
                         return;
@@ -605,17 +612,16 @@
 
                     showAlert('success', 'Guardando cambios...');
                 });
-
                 // 4. Alertas
                 function showAlert(type, message) {
                     const alert = document.createElement('div');
                     alert.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
                     alert.style.cssText = 'top: 20px; right: 20px; z-index: 1050; max-width: 400px;';
                     alert.innerHTML = `
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
+                                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                                        ${message}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    `;
                     document.body.appendChild(alert);
 
                     setTimeout(() => {
