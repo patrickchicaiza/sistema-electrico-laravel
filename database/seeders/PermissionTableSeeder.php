@@ -21,14 +21,14 @@ class PermissionTableSeeder extends Seeder
             'editar-usuarios',
             'eliminar-usuarios',
 
-            // Permisos de Reportes (los agregaremos después)
+            // Permisos de Reportes
             'ver-reportes',
             'crear-reportes',
             'editar-reportes',
             'eliminar-reportes',
-            'asignar-reportes', // Para administradores
+            'asignar-reportes',
 
-            // Permisos de Roles (opcional, si usas CRUD de roles)
+            // Permisos de Roles
             'ver-roles',
             'crear-roles',
             'editar-roles',

@@ -253,9 +253,7 @@
 
                                                 @if(auth()->user()->es_administrador)
                                                     <td>
-                                                        <small>{{ $reporte->cliente->name }}</small>
-                                                        <br>
-                                                        <small class="text-muted">{{ $reporte->cliente->telefono }}</small>
+                                                        <small>{{ $reporte->cliente->name }}</small>                                                        
                                                     </td>
                                                 @endif
 
@@ -289,17 +287,33 @@
                                                 </td>
 
                                                 <td>
-                                                    <small>{{ $reporte->created_at->format('d/m/Y') }}</small>
-                                                    <br>
-                                                    <small class="text-muted">{{ $reporte->created_at->format('H:i') }}</small>
+                                                    <small>{{ $reporte->created_at->format('d/m/Y') }}</small> - <small class="text-muted">{{ $reporte->created_at->format('H:i') }}</small>
                                                 </td>
 
                                                 @if(auth()->user()->es_administrador)
                                                     <td>
                                                         @if($reporte->tecnico)
-                                                            {{ $reporte->tecnico->name }}
+                                                            <small>{{ $reporte->tecnico->name }}</small>                                                            
                                                         @else
-                                                            <span class="badge bg-warning">Por asignar</span>
+                                                            <!-- Diferentes mensajes según estado -->
+                                                            @php
+                                                                $mensajes = [
+                                                                    'pendiente' => ['warning', 'Por asignar'],
+                                                                    'asignado' => ['info', 'Asignado'],
+                                                                    'en_proceso' => ['primary', 'En proceso'],
+                                                                    'resuelto' => ['success', 'Resuelto'],
+                                                                    'cancelado' => ['danger', 'Cancelado']
+                                                                ];
+                                                                [$color_tecnico, $texto_tecnico] = $mensajes[$reporte->estado] ?? ['secondary', 'Sin asignar'];
+                                                            @endphp
+                                                            
+                                                            <span class="badge bg-{{ $color_tecnico }}">
+                                                                {{ $texto_tecnico }}
+                                                            </span>
+                                                            
+                                                            @if($reporte->estado == 'pendiente')
+                                                                
+                                                            @endif
                                                         @endif
                                                     </td>
                                                 @endif
@@ -332,21 +346,23 @@
                                                             @endif
                                                         @endif
 
-                                                        @if(auth()->user()->es_administrador && $reporte->estado == 'pendiente')
+                                                        @if(auth()->user()->es_administrador && $reporte->estado == 'pendiente' && !$reporte->tecnico)
                                                             <div class="dropdown d-inline">
                                                                 <button class="btn btn-outline-success dropdown-toggle" type="button"
-                                                                    data-bs-toggle="dropdown" title="Asignar técnico">
+                                                                    data-bs-toggle="dropdown" title="Asignar técnico"
+                                                                    onclick="event.stopPropagation();">
                                                                     <i class="fas fa-user-plus"></i>
                                                                 </button>
                                                                 <ul class="dropdown-menu">
                                                                     @foreach(\App\Models\User::tecnicosDisponibles()->get() as $tecnico)
                                                                         <li>
                                                                             <form action="{{ route('reportes.asignar', $reporte->id) }}"
-                                                                                method="POST">
+                                                                                method="POST" onclick="event.stopPropagation();">
                                                                                 @csrf
                                                                                 <input type="hidden" name="tecnico_id"
                                                                                     value="{{ $tecnico->id }}">
-                                                                                <button type="submit" class="dropdown-item">
+                                                                                <button type="submit" class="dropdown-item" 
+                                                                                        onclick="return confirm('¿Asignar este reporte a {{ $tecnico->name }}?');">
                                                                                     {{ $tecnico->name }}
                                                                                 </button>
                                                                             </form>
@@ -418,15 +434,6 @@
                 document.querySelectorAll('form[action*="cambiar-estado"]').forEach(form => {
                     form.addEventListener('submit', function (e) {
                         if (!confirm('¿Comenzar a trabajar en este reporte?')) {
-                            e.preventDefault();
-                        }
-                    });
-                });
-
-                // Confirmación para asignar técnico
-                document.querySelectorAll('form[action*="asignar"]').forEach(form => {
-                    form.addEventListener('submit', function (e) {
-                        if (!confirm('¿Asignar este reporte al técnico seleccionado?')) {
                             e.preventDefault();
                         }
                     });
