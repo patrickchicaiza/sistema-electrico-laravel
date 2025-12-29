@@ -353,4 +353,44 @@ class UserController extends Controller
 
         return false; // Clientes y técnicos no pueden eliminar usuarios
     }
+
+    /**
+     * Muestra el perfil personal del usuario autenticado
+     */
+    public function profile(): View
+    {
+        $user = auth()->user();
+        return view('users.profile', compact('user'));
+    }
+
+    /**
+     * Actualiza el perfil personal del usuario autenticado
+     */
+    public function updateProfile(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:500',
+            'password' => 'nullable|confirmed|min:8',
+        ]);
+
+        $datosActualizar = [
+            'name' => $validated['name'],
+            'telefono' => $validated['telefono'] ?? null,
+            'direccion' => $validated['direccion'] ?? null,
+        ];
+
+        if (!empty($validated['password'])) {
+            $datosActualizar['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($datosActualizar);
+
+        // **CORRECCIÓN: Redirigir al SHOW del usuario actualizado**
+        return redirect()->route('users.show', $user->id)
+            ->with('success', 'Perfil actualizado correctamente');
+    }
 }

@@ -159,7 +159,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="{{ route('users.show', auth()->id()) }}">
-                                        <i class="fas fa-user"></i> Mi Perfil
+                                        <i class="fas fa-user-circle me-2"></i> Mi Perfil
                                     </a>
                                 </li>
                                 <li>

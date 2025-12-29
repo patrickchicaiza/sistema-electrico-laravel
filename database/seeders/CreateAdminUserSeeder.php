@@ -32,12 +32,14 @@ class CreateAdminUserSeeder extends Seeder
 
         // Asignar permisos a técnico
         $tecnicoRole->syncPermissions([
+            'ver-usuarios',
             'ver-reportes',
             'editar-reportes' // Solo sus reportes asignados
         ]);
 
         // Asignar permisos a cliente
         $clienteRole->syncPermissions([
+            'ver-usuarios',
             'crear-reportes',
             'ver-reportes', // Solo sus reportes
             'editar-reportes'  // 
