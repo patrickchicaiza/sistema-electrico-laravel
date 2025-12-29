@@ -84,32 +84,30 @@ class UserController extends Controller
     {
         $userActual = auth()->user();
 
-        // Validación básica
+        // Validación básica - SOLO UN ROL
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
             'telefono' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
-            'roles' => 'required|array',
-            'roles.*' => 'in:cliente,tecnico,administrador,super_admin'
+            'roles' => 'required|array|size:1', // SOLO UN ROL
+            'roles.0' => 'required|in:cliente,tecnico,administrador,super_admin'
         ]);
 
-        // Validación de seguridad: ¿puede asignar estos roles?
-        $rolesSolicitados = $request->roles;
+        // Obtener el rol seleccionado (primer elemento del array)
+        $rolSeleccionado = $validated['roles'][0];
 
+        // Validación de seguridad: ¿puede asignar este rol?
         if (!$userActual->hasRole('super_admin')) {
             // No super_admin no puede asignar super_admin
-            if (in_array('super_admin', $rolesSolicitados)) {
+            if ($rolSeleccionado == 'super_admin') {
                 return back()->withErrors(['roles' => 'No tienes permiso para asignar rol super_admin']);
             }
 
             // Administrador normal solo puede asignar cliente/tecnico
-            if ($userActual->hasRole('administrador')) {
-                $rolesPermitidos = ['cliente', 'tecnico'];
-                if (array_diff($rolesSolicitados, $rolesPermitidos)) {
-                    return back()->withErrors(['roles' => 'Solo puedes asignar roles: cliente o técnico']);
-                }
+            if ($userActual->hasRole('administrador') && !in_array($rolSeleccionado, ['cliente', 'tecnico'])) {
+                return back()->withErrors(['roles' => 'Solo puedes asignar roles: cliente o técnico']);
             }
         }
 
@@ -122,22 +120,12 @@ class UserController extends Controller
             'direccion' => $validated['direccion'] ?? null,
         ]);
 
-        // Asignar roles
-        $user->assignRole($rolesSolicitados);
+        // Asignar UN solo rol
+        $user->assignRole([$rolSeleccionado]);
 
         return redirect()->route('users.index')
             ->with('success', 'Usuario creado correctamente');
     }
-
-    // ... (show, edit, update, destroy similares con estas validaciones)
-
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
 
     public function show($id): View
     {
@@ -152,9 +140,6 @@ class UserController extends Controller
         return view('users.show', compact('user'));
     }
 
-    /**
-     * Show the form for editing the specified user.
-     */
     public function edit($id): View
     {
         $userActual = auth()->user();
@@ -178,14 +163,12 @@ class UserController extends Controller
             $rolesDisponibles = $rolesDisponibles->only(['cliente', 'tecnico']);
         }
 
-        $userRole = $user->roles->pluck('name', 'name')->all();
+        // Obtener el primer rol del usuario (solo tiene uno)
+        $userRole = $user->getRoleNames()->first();
 
         return view('users.edit', compact('user', 'rolesDisponibles', 'userRole'));
     }
 
-    /**
-     * Update the specified user in storage.
-     */
     public function update(Request $request, $id): RedirectResponse
     {
         $userActual = auth()->user();
@@ -196,36 +179,34 @@ class UserController extends Controller
             abort(403, 'No autorizado para editar este usuario');
         }
 
-        // Validación básica
+        // Validación básica - SOLO UN ROL
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|confirmed|min:8',
             'telefono' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
-            'roles' => 'required|array',
-            'roles.*' => 'in:cliente,tecnico,administrador,super_admin'
+            'roles' => 'required|array|size:1', // SOLO UN ROL
+            'roles.0' => 'required|in:cliente,tecnico,administrador,super_admin'
         ]);
 
-        // Validación de seguridad: ¿puede asignar estos roles?
-        $rolesSolicitados = $request->roles;
+        // Obtener el rol seleccionado (primer elemento del array)
+        $rolSeleccionado = $validated['roles'][0];
 
+        // Validación de seguridad: ¿puede asignar este rol?
         if (!$userActual->hasRole('super_admin')) {
             // No super_admin no puede asignar super_admin
-            if (in_array('super_admin', $rolesSolicitados)) {
+            if ($rolSeleccionado == 'super_admin') {
                 return back()->withErrors(['roles' => 'No tienes permiso para asignar rol super_admin']);
             }
 
             // Administrador normal solo puede asignar cliente/tecnico
-            if ($userActual->hasRole('administrador')) {
-                $rolesPermitidos = ['cliente', 'tecnico'];
-                if (array_diff($rolesSolicitados, $rolesPermitidos)) {
-                    return back()->withErrors(['roles' => 'Solo puedes asignar roles: cliente o técnico']);
-                }
+            if ($userActual->hasRole('administrador') && !in_array($rolSeleccionado, ['cliente', 'tecnico'])) {
+                return back()->withErrors(['roles' => 'Solo puedes asignar roles: cliente o técnico']);
             }
 
             // Usuario normal no puede cambiarse a sí mismo a administrador
-            if ($userActual->id == $id && in_array('administrador', $rolesSolicitados)) {
+            if ($userActual->id == $id && $rolSeleccionado == 'administrador') {
                 return back()->withErrors(['roles' => 'No puedes cambiarte a administrador']);
             }
         }
@@ -246,16 +227,13 @@ class UserController extends Controller
         // Actualizar usuario
         $user->update($datosActualizar);
 
-        // Sincronizar roles (elimina los antiguos y asigna los nuevos)
-        $user->syncRoles($rolesSolicitados);
+        // Sincronizar UN solo rol
+        $user->syncRoles([$rolSeleccionado]);
 
         return redirect()->route('users.index')
             ->with('success', 'Usuario actualizado correctamente');
     }
 
-    /**
-     * Remove the specified user from storage.
-     */
     public function destroy($id): RedirectResponse
     {
         $userActual = auth()->user();
