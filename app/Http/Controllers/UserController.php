@@ -47,10 +47,10 @@ class UserController extends Controller
             $users = $query->latest()->paginate(10)->withQueryString();
 
         } elseif ($userActual->hasRole('tecnico')) {
-            // Técnico se ve a sí mismo y a administradores (para contactar)
+            // **CORRECCIÓN: Técnico se ve a sí mismo y solo a administradores (NO super_admins)**
             $users = User::where('id', $userActual->id)
                 ->orWhereHas('roles', function ($q) {
-                    $q->whereIn('name', ['administrador', 'super_admin']);
+                    $q->where('name', 'administrador'); // ← SOLO administrador, NO super_admin
                 })
                 ->get();
         } else {
@@ -84,21 +84,26 @@ class UserController extends Controller
     {
         $userActual = auth()->user();
 
-        // Validación básica - SOLO UN ROL
+        // **OBTENER TODOS LOS ROLES DISPONIBLES (incluye personalizados)**
+        $rolesDisponibles = \Spatie\Permission\Models\Role::pluck('name')->toArray();
+        $rolesPermitidos = implode(',', $rolesDisponibles);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
             'telefono' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
-            'roles' => 'required|array|size:1', // SOLO UN ROL
-            'roles.0' => 'required|in:cliente,tecnico,administrador,super_admin'
+            'roles' => 'required|array|size:1',
+            'roles.0' => 'required|in:' . $rolesPermitidos // ← Dinámico según BD
+        ], [
+            'roles.0.in' => 'El rol seleccionado no es válido. Roles disponibles: ' . str_replace(',', ', ', $rolesPermitidos)
         ]);
 
         // Obtener el rol seleccionado (primer elemento del array)
         $rolSeleccionado = $validated['roles'][0];
 
-        // Validación de seguridad: ¿puede asignar este rol?
+        // **VALIDACIÓN DE SEGURIDAD: ¿puede asignar este rol?**
         if (!$userActual->hasRole('super_admin')) {
             // No super_admin no puede asignar super_admin
             if ($rolSeleccionado == 'super_admin') {
@@ -150,8 +155,8 @@ class UserController extends Controller
             abort(403, 'No autorizado para editar este usuario');
         }
 
-        // Obtener roles disponibles según permisos
-        $rolesDisponibles = Role::pluck('name', 'name');
+        // **OBTENER TODOS LOS ROLES (incluye personalizados)**
+        $rolesDisponibles = Role::pluck('name', 'name'); // Esto ya incluye todos
 
         // Filtrar roles según permisos del usuario actual
         if (!$userActual->hasRole('super_admin')) {
@@ -178,6 +183,7 @@ class UserController extends Controller
         if (!$this->puedeEditarUsuario($userActual, $user)) {
             abort(403, 'No autorizado para editar este usuario');
         }
+
         // **NUEVA VALIDACIÓN: No cambiar técnico a cliente si tiene reportes activos**
         if ($user->hasRole('tecnico')) {
             $nuevosRoles = $request->roles;
@@ -199,7 +205,11 @@ class UserController extends Controller
             }
         }
 
-        // Validación básica - SOLO UN ROL
+        // **OBTENER TODOS LOS ROLES DISPONIBLES (incluye personalizados)**
+        $rolesDisponibles = \Spatie\Permission\Models\Role::pluck('name')->toArray();
+        $rolesPermitidos = implode(',', $rolesDisponibles);
+
+        // **VALIDACIÓN ÚNICA (no duplicada)**
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
@@ -207,13 +217,15 @@ class UserController extends Controller
             'telefono' => 'nullable|string|max:20',
             'direccion' => 'nullable|string|max:500',
             'roles' => 'required|array|size:1', // SOLO UN ROL
-            'roles.0' => 'required|in:cliente,tecnico,administrador,super_admin'
+            'roles.0' => 'required|in:' . $rolesPermitidos // ← Dinámico según BD
+        ], [
+            'roles.0.in' => 'El rol seleccionado no es válido. Roles disponibles: ' . str_replace(',', ', ', $rolesPermitidos)
         ]);
 
         // Obtener el rol seleccionado (primer elemento del array)
         $rolSeleccionado = $validated['roles'][0];
 
-        // Validación de seguridad: ¿puede asignar este rol?
+        // **VALIDACIÓN DE SEGURIDAD: ¿puede asignar este rol?**
         if (!$userActual->hasRole('super_admin')) {
             // No super_admin no puede asignar super_admin
             if ($rolSeleccionado == 'super_admin') {
@@ -247,10 +259,11 @@ class UserController extends Controller
         // Actualizar usuario
         $user->update($datosActualizar);
 
-        // Sincronizar UN solo rol
+        // **SINCRONIZAR UN solo rol (FALTA ESTA LÍNEA CRÍTICA)**
         $user->syncRoles([$rolSeleccionado]);
 
-        return redirect()->route('users.index')
+        // **Redirigir al show del usuario editado**
+        return redirect()->route('users.show', $user->id)
             ->with('success', 'Usuario actualizado correctamente');
     }
 
@@ -297,14 +310,13 @@ class UserController extends Controller
             return !$userAVer->hasRole('super_admin');
         }
 
-        // **CAMBIAR ESTO: Técnico puede verse a sí mismo y a administradores**
+        // **CORRECCIÓN: Técnico puede verse a sí mismo y solo a administradores**
         if ($userActual->hasRole('tecnico')) {
             return $userAVer->id == $userActual->id ||
-                $userAVer->hasRole('administrador') ||
-                $userAVer->hasRole('super_admin');
+                $userAVer->hasRole('administrador'); // ← SOLO administrador
         }
 
-        // **CAMBIAR ESTO: Cliente puede verse a sí mismo**
+        // Cliente solo puede verse a sí mismo
         if ($userActual->hasRole('cliente')) {
             return $userAVer->id == $userActual->id;
         }
@@ -327,10 +339,16 @@ class UserController extends Controller
         // Administrador puede editar clientes y técnicos
         if ($userActual->hasRole('administrador')) {
             return $userAEditar->hasRole('cliente') ||
-                $userAEditar->hasRole('tecnico');
+                $userAEditar->hasRole('tecnico') ||
+                $userAEditar->id == $userActual->id; // ← Puede editar su propio perfil
         }
 
-        // Usuarios solo pueden editar su propia cuenta
+        // Técnico solo puede editar su propia cuenta
+        if ($userActual->hasRole('tecnico')) {
+            return $userAEditar->id == $userActual->id;
+        }
+
+        // Cliente solo puede editar su propia cuenta
         return $userAEditar->id == $userActual->id;
     }
 

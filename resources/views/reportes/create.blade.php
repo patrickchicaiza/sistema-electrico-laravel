@@ -17,7 +17,7 @@
                 <div class="text-end">
                     <div class="badge bg-{{ auth()->user()->puede_crear_reporte ? 'success' : 'danger' }} p-2">
                         <i class="fas fa-{{ auth()->user()->puede_crear_reporte ? 'check' : 'exclamation-triangle' }} me-1"></i>
-                        {{ auth()->user()->reportes_activos_count }}/3 reportes activos
+                        {{ auth()->user()->reportesComoCliente()->where('estado', 'pendiente')->count() }}/3 reportes activos
                     </div>
                 </div>
             </div>

@@ -14,42 +14,42 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Estilos personalizados -->
     <style>
-        .navbar-brand {
-            font-weight: bold;
-            color: #fff !important;
-        }
+    .navbar-brand {
+        font-weight: bold;
+        color: #fff !important;
+    }
 
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background: #343a40;
-            padding-top: 20px;
-        }
+    .sidebar {
+        min-height: calc(100vh - 56px);
+        background: #343a40;
+        padding-top: 20px;
+    }
 
-        .sidebar .nav-link {
-            color: #adb5bd;
-            padding: 10px 20px;
-            margin: 5px 0;
-        }
+    .sidebar .nav-link {
+        color: #adb5bd;
+        padding: 10px 20px;
+        margin: 5px 0;
+    }
 
-        .sidebar .nav-link:hover {
-            color: #fff;
-            background: #495057;
-        }
+    .sidebar .nav-link:hover {
+        color: #fff;
+        background: #495057;
+    }
 
-        .sidebar .nav-link.active {
-            color: #fff;
-            background: #007bff;
-        }
+    .sidebar .nav-link.active {
+        color: #fff;
+        background: #007bff;
+    }
 
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
 
-        .badge-estado {
-            font-size: 0.8em;
-            padding: 5px 10px;
-        }
+    .badge-estado {
+        font-size: 0.8em;
+        padding: 5px 10px;
+    }
     </style>
 </head>
 
@@ -70,111 +70,117 @@
                 <!-- Menú izquierda -->
                 <ul class="navbar-nav me-auto">
                     @auth
-                        <!-- Opciones según rol -->
-                        @if(auth()->user()->es_cliente)
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                                    href="{{ route('dashboard') }}">
-                                    <i class="fas fa-home"></i> Inicio
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
-                                    href="{{ route('reportes.index') }}">
-                                    <i class="fas fa-list"></i> Mis Reportes
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('reportes.create') ? 'active' : '' }}"
-                                    href="{{ route('reportes.create') }}">
-                                    <i class="fas fa-plus-circle"></i> Nuevo Reporte
-                                </a>
-                            </li>
-                        @endif
+                    <!-- Opciones según rol -->
+                    @if(auth()->user()->es_cliente)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                            href="{{ route('dashboard') }}">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
+                            href="{{ route('reportes.index') }}">
+                            <i class="fas fa-list"></i> Mis Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reportes.create') ? 'active' : '' }}"
+                            href="{{ route('reportes.create') }}">
+                            <i class="fas fa-plus-circle"></i> Nuevo Reporte
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(auth()->user()->es_tecnico)
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                                    href="{{ route('dashboard') }}">
-                                    <i class="fas fa-home"></i> Inicio
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
-                                    href="{{ route('reportes.index') }}">
-                                    <i class="fas fa-tasks"></i> Reportes Asignados
-                                </a>
-                            </li>
-                        @endif
+                    @if(auth()->user()->es_tecnico)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                            href="{{ route('dashboard') }}">
+                            <i class="fas fa-home"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
+                            href="{{ route('reportes.index') }}">
+                            <i class="fas fa-tasks"></i> Reportes Asignados
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                            href="{{ route('users.index') }}">
+                            <i class="fas fa-users me-1"></i> Usuarios
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(auth()->user()->es_administrador)
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                                    href="{{ route('dashboard') }}">
-                                    <i class="fas fa-home me-1"></i> Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
-                                    href="{{ route('reportes.index') }}">
-                                    <i class="fas fa-clipboard-list me-1"></i> Todos los Reportes
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
-                                    href="{{ route('users.index') }}">
-                                    <i class="fas fa-users me-1"></i> Usuarios
-                                </a>
-                            </li>
-                            <!-- VER ROLES SOLO SI TIENE PERMISO ver-roles -->
-                            @can('ver-roles')
-                                <li class="nav-item">
-                                    <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"
-                                        href="{{ route('roles.index') }}">
-                                        <i class="fas fa-user-shield me-1"></i> Roles
-                                    </a>
-                                </li>
-                            @endcan
-                        @endif
+                    @if(auth()->user()->es_administrador)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                            href="{{ route('dashboard') }}">
+                            <i class="fas fa-home me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reportes.*') ? 'active' : '' }}"
+                            href="{{ route('reportes.index') }}">
+                            <i class="fas fa-clipboard-list me-1"></i> Todos los Reportes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                            href="{{ route('users.index') }}">
+                            <i class="fas fa-users me-1"></i> Usuarios
+                        </a>
+                    </li>
+                    <!-- VER ROLES SOLO SI TIENE PERMISO ver-roles -->
+                    @can('ver-roles')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('roles.*') ? 'active' : '' }}"
+                            href="{{ route('roles.index') }}">
+                            <i class="fas fa-user-shield me-1"></i> Roles
+                        </a>
+                    </li>
+                    @endcan
+                    @endif
                     @endauth
                 </ul>
 
                 <!-- Menú derecha (usuario) -->
                 <ul class="navbar-nav ms-auto">
                     @guest
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}">Registro</a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('register') }}">Registro</a>
+                    </li>
                     @else
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle"></i> {{ Auth::user()->name }}
-                                <span class="badge bg-info ms-1">
-                                    {{ auth()->user()->getRoleNames()->first() }}
-                                </span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('users.show', auth()->id()) }}">
-                                        <i class="fas fa-user-circle me-2"></i> Mi Perfil
-                                    </a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> {{ Auth::user()->name }}
+                            <span class="badge bg-info ms-1">
+                                {{ auth()->user()->getRoleNames()->first() }}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ route('users.show', auth()->id()) }}">
+                                    <i class="fas fa-user-circle me-2"></i> Mi Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
                     @endguest
                 </ul>
             </div>
@@ -188,24 +194,24 @@
             <main class="col-12 px-md-4 py-4">
                 <!-- Mensajes de sesión -->
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @if(session('warning'))
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> {{ session('warning') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 <!-- Contenido específico de cada vista -->
@@ -219,22 +225,22 @@
 
     <!-- Scripts personalizados -->
     <script>
-        // Activar tooltips
-        document.addEventListener('DOMContentLoaded', function () {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+    // Activar tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
+    });
 
-        // Auto-ocultar alerts después de 5 segundos
-        setTimeout(function () {
-            var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function (alert) {
-                var bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
+    // Auto-ocultar alerts después de 5 segundos
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            var bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
     </script>
 
     @stack('scripts')

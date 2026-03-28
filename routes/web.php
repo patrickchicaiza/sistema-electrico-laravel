@@ -31,16 +31,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
 
-        // Redirigir según rol
+        // **CORRECCIÓN: Cada rol va a SU dashboard correspondiente**
         if ($user->hasRole('cliente')) {
-            return redirect()->route('reportes.index');
+            return view('dashboard.cliente'); // ← Cliente a SU dashboard
         } elseif ($user->hasRole('tecnico')) {
-            return redirect()->route('reportes.index');
+            return view('dashboard.tecnico'); // ← Técnico a SU dashboard
         } elseif ($user->hasRole('administrador') || $user->hasRole('super_admin')) {
-            return view('dashboard.admin');
+            return view('dashboard.admin'); // ← Admin a SU dashboard
         }
 
-        return view('dashboard');
+        return view('dashboard'); // Dashboard genérico por defecto
     })->name('dashboard');
 
     // Rutas con permisos YA controlados en los controladores
